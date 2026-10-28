@@ -18,10 +18,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22RAS%20Syllabus%20Tracker%22%2C%22short_name%22%3A%22RAS%20Tracker%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%23ea580c%22%7D">
+  <link id="manifestLink" rel="manifest">
   <meta name="theme-color" content="#ea580c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RAS Tracker">
 
   <script>
     tailwind.config = {
@@ -71,8 +72,13 @@
       </div>
     </div>
 
-    <!-- Actions (Theme, JSON Backup/Restore, Settings) -->
+    <!-- Actions (Install/Download, Theme, JSON Backup/Restore, Settings) -->
     <div class="flex items-center space-x-2">
+      <!-- Direct PWA Download / Install App Button -->
+      <button id="pwaInstallHeaderBtn" onclick="triggerPwaInstall()" class="hidden px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-[11px] font-bold shadow flex items-center gap-1.5 transition">
+        <i class="fa-solid fa-download"></i> <span>Install App</span>
+      </button>
+
       <button id="themeToggleBtn" class="w-7 h-7 rounded-lg flex items-center justify-center border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs">
         <i class="fa-solid fa-moon dark:hidden"></i>
         <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
@@ -83,6 +89,9 @@
         </button>
         <!-- Dropdown Menu -->
         <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 text-xs">
+          <button id="pwaInstallMenuBtn" onclick="triggerPwaInstall()" class="w-full text-left px-3 py-2 text-brand-600 dark:text-brand-400 font-bold hover:bg-brand-50 dark:hover:bg-brand-950/40 flex items-center">
+            <i class="fa-solid fa-mobile-screen-button mr-2"></i> <span>Download / Install App</span>
+          </button>
           <button onclick="exportBackup()" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
             <i class="fa-solid fa-download mr-2 text-emerald-500"></i> <span>Export Backup (JSON)</span>
           </button>
@@ -1985,7 +1994,112 @@
     /* ============================================================
        INITIALIZATION
        ============================================================ */
+    // PWA Install Prompt state
+    let deferredPwaPrompt = null;
+
+    function setupPwaManifestAndServiceWorker() {
+      // 1. Generate High-Res SVG Icon Data URL for PWA Manifest
+      const svgIcon = encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+          <rect width="512" height="512" rx="100" fill="#ea580c"/>
+          <path d="M256 120 L390 195 L256 270 L122 195 Z" fill="#ffffff"/>
+          <path d="M165 240 L165 315 Q256 365 347 315 L347 240 Q256 295 165 240 Z" fill="#ffffff" opacity="0.95"/>
+          <circle cx="390" cy="225" r="10" fill="#fef08a"/>
+          <rect x="386" y="235" width="8" height="60" fill="#fef08a" rx="4"/>
+        </svg>
+      `.trim());
+      const iconDataUrl = `data:image/svg+xml;charset=utf-8,${svgIcon}`;
+
+      // 2. Inject compliant PWA Manifest
+      const manifestObj = {
+        name: "RAS Syllabus Tracker",
+        short_name: "RAS Tracker",
+        description: "Personal Smart Study Tracker for RAS Prelims and Mains",
+        start_url: "./",
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#0f172a",
+        theme_color: "#ea580c",
+        icons: [
+          {
+            src: iconDataUrl,
+            sizes: "192x192",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          },
+          {
+            src: iconDataUrl,
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/json" });
+      const manifestLink = document.getElementById('manifestLink');
+      if (manifestLink) {
+        manifestLink.setAttribute('href', URL.createObjectURL(manifestBlob));
+      }
+
+      // 3. Register self-contained Service Worker (Needed by Chrome for "Install / Download" badge)
+      if ('serviceWorker' in navigator) {
+        const swScript = `
+          const CACHE_NAME = 'ras-tracker-cache-v1';
+          self.addEventListener('install', (e) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (e) => {
+            e.waitUntil(clients.claim());
+          });
+          self.addEventListener('fetch', (e) => {
+            // Network first with cache fallback
+            e.respondWith(
+              fetch(e.request).catch(() => caches.match(e.request))
+            );
+          });
+        `;
+        const swBlob = new Blob([swScript], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+
+        navigator.serviceWorker.register(swUrl)
+          .then(() => console.log('Service Worker registered successfully'))
+          .catch((err) => console.log('SW registration note:', err));
+      }
+
+      // 4. Capture 'beforeinstallprompt' to show download/install button
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const installBtn = document.getElementById('pwaInstallHeaderBtn');
+        if (installBtn) installBtn.classList.remove('hidden');
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPwaPrompt = null;
+        const installBtn = document.getElementById('pwaInstallHeaderBtn');
+        if (installBtn) installBtn.classList.add('hidden');
+        showNotification('RAS Syllabus Tracker सफलतापूर्वक इंस्टॉल हो गया!');
+      });
+    }
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showNotification('ऐप इंस्टॉल की जा रही है...');
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        // Fallback guidance if browser doesn't expose prompt directly
+        showNotification('ब्राउज़र के ऊपर 3 डॉट्स (⋮) पर क्लिक करके "Install app" या "Add to Home screen" चुनें।');
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
+      setupPwaManifestAndServiceWorker();
+
       if (window.pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
       }
