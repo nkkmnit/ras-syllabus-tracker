@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="hi" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RAS Syllabus Tracker | Indian AI Factory</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PDF.js for line-by-line client-side PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <!-- Mammoth.js for Word (.docx) client-side extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22RAS%20Syllabus%20Tracker%22%2C%22short_name%22%3A%22RAS%20Tracker%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%23ea580c%22%7D">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    body { font-family: 'Inter', 'Noto Sans Devanagari', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .tab-active { color: #ea580c; border-top: 2px solid #ea580c; font-weight: 600; }
+    .badge-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col pb-20 select-none">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 shadow-sm px-4 py-2 flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div>
+        <h1 class="text-[10px] font-semibold text-brand-600 dark:text-brand-500 tracking-wider uppercase">INDIAN AI FACTORY</h1>
+        <h2 class="text-xs font-bold leading-tight">अध्ययन ट्रैकर</h2>
+      </div>
+    </div>
+
+    <!-- Actions (Theme, JSON Backup/Restore, Settings) -->
+    <div class="flex items-center space-x-2">
+      <button id="themeToggleBtn" class="w-7 h-7 rounded-lg flex items-center justify-center border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs">
+        <i class="fa-solid fa-moon dark:hidden"></i>
+        <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+      </button>
+      <div class="relative">
+        <button id="settingsMenuBtn" class="w-7 h-7 rounded-lg flex items-center justify-center border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <!-- Dropdown Menu -->
+        <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 text-xs">
+          <button onclick="exportBackup()" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+            <i class="fa-solid fa-download mr-2 text-emerald-500"></i> <span>Export Backup (JSON)</span>
+          </button>
+          <label class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center cursor-pointer">
+            <i class="fa-solid fa-upload mr-2 text-sky-500"></i> <span>Restore Data (JSON)</span>
+            <input type="file" id="restoreFileInput" accept=".json" class="hidden">
+          </label>
+          <button onclick="openPdfImportModal()" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+            <i class="fa-solid fa-file-import mr-2 text-rose-500"></i> <span>Import PDF / Word / Text</span>
+          </button>
+          <button onclick="openBulkHolidayModal()" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center">
+            <i class="fa-solid fa-calendar-check mr-2 text-emerald-500"></i> <span>Add Month Holidays</span>
+          </button>
+          <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+          <button onclick="resetAllData()" class="w-full text-left px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center">
+            <i class="fa-solid fa-rotate-left mr-2"></i> <span>Reset to Defaults</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+    <!-- 1. DASHBOARD VIEW -->
+    <section id="viewDashboard" class="space-y-4">
+      <!-- Target & Duty Hero Card (Compact, no 3 stat boxes) -->
+      <div class="bg-gradient-to-br from-brand-600 to-amber-600 rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 text-white/10 text-8xl pointer-events-none">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 backdrop-blur" id="todayDateLabel">Today</span>
+            <h3 class="text-xl font-bold mt-1.5">अध्ययन ट्रैकर</h3>
+            <p class="text-xs text-orange-100 mt-0.5" id="dutyStatusDesc">Duty: Loading...</p>
+          </div>
+          <button onclick="openDayDutyConfig(AppState.currentDateKey)" class="bg-white text-brand-700 text-xs px-2.5 py-1.5 rounded-lg font-bold shadow hover:bg-orange-50 transition flex items-center gap-1">
+            <i class="fa-regular fa-calendar-check"></i> <span>Change Shift</span>
+          </button>
+        </div>
+
+        <div class="mt-3 w-full bg-black/20 rounded-full h-2 overflow-hidden">
+          <div id="dashProgressBar" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <button onclick="startQuickTimer()" class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center hover:border-brand-500 transition group">
+        <div class="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition">
+          <i class="fa-solid fa-stopwatch"></i>
+        </div>
+        <span class="text-xs font-semibold">Study Timer</span>
+        <span class="text-[10px] text-slate-500">Live Stopwatch</span>
+      </button>
+
+      <button onclick="openTopicPickerModal()" class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center hover:border-brand-500 transition group">
+        <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <span class="text-xs font-semibold">विषय एवं टॉपिक चयन</span>
+        <span class="text-[10px] text-slate-500">Auto / Custom Plan</span>
+      </button>
+
+      <button onclick="openCustomPlanModal()" class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center hover:border-brand-500 transition group">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition">
+          <i class="fa-solid fa-circle-plus"></i>
+        </div>
+        <span class="text-xs font-semibold">नया टॉपिक जोड़ें</span>
+        <span class="text-[10px] text-slate-500">Add Custom Topic</span>
+      </button>
+
+      <button onclick="openDocImportModal()" class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center hover:border-brand-500 transition group">
+        <div class="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition">
+          <i class="fa-solid fa-file-arrow-up"></i>
+        </div>
+        <span class="text-xs font-semibold">PDF / Word Import</span>
+        <span class="text-[10px] text-slate-500">Comma & Line Split</span>
+      </button>
+    </div>
+
+    <!-- TODAY'S STUDY PLAN - EXPANDED TALL 2 PARTITIONS -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-list-check text-brand-600"></i>
+          <h4 class="font-bold text-sm">Today's Study Plan (आज का अध्ययन प्लान)</h4>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openTopicPickerModal()" class="text-xs bg-brand-50 dark:bg-brand-950 text-brand-600 px-2.5 py-1.5 rounded-lg font-semibold hover:bg-brand-100">
+            <i class="fa-solid fa-plus-circle mr-1"></i> विषय/टॉपिक चुनें
+          </button>
+          <button onclick="runAutoDailyPlan(true)" class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded-lg font-semibold hover:bg-slate-200">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i> Auto Balance
+          </button>
+        </div>
+      </div>
+
+      <!-- 2-COLUMN PARTITION GRID WITH EXPANDED HEIGHT -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- PARTITION 1: TODAY'S NEW TOPICS (आज के नए विषय) - TALL SCROLLABLE -->
+        <div class="bg-slate-50/70 dark:bg-slate-900/40 rounded-xl p-3 border border-slate-200 dark:border-slate-700/80 flex flex-col min-h-[580px] h-[640px]">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-200">1. Today's New Topics (आज के नए विषय)</span>
+            </div>
+            <span id="newTopicsCountBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">0 Pending</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-2">टिक करते ही यह टॉपिक आज की लिस्ट से हट जाएगा और 3 दिन, 7 दिन व 30 दिन के रिविज़न में स्वतः जुड़ जाएगा।</p>
+
+          <div id="todayNewTopicsList" class="space-y-2 flex-1 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- PARTITION 2: TODAY'S REVISION (आज का रिविज़न) - TALL SCROLLABLE -->
+        <div class="bg-amber-50/40 dark:bg-amber-950/20 rounded-xl p-3 border border-amber-200/70 dark:border-amber-800/40 flex flex-col min-h-[580px] h-[640px]">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span class="text-xs font-bold text-amber-900 dark:text-amber-200">2. Today's Revision (आज का रिविज़न)</span>
+            </div>
+            <span id="revisionCountBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">0 Due</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-2">कम समय में रिविज़न: 3 दिन, 7 दिन और 30 दिन पूरे होने पर विषय यहाँ स्वतः दिखाई देंगे।</p>
+
+          <div id="todayRevisionsList" class="space-y-2 flex-1 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. GRANULAR SYLLABUS VIEW -->
+  <section id="viewSyllabus" class="space-y-3 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+      <div>
+        <h3 class="text-sm font-bold">RAS Detailed Syllabus Navigator</h3>
+        <p class="text-[11px] text-slate-500">Deep line-by-line breakdown (चौहान, गुहिल, राठौड़, कछवाहा etc.).</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openDocImportModal()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-xl font-medium shadow whitespace-nowrap">
+          <i class="fa-solid fa-file-import mr-1"></i> Import Doc / PDF
+        </button>
+        <button onclick="openCustomPlanModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-xl font-medium shadow whitespace-nowrap">
+          <i class="fa-solid fa-plus mr-1"></i> Add Topic
+        </button>
+      </div>
+    </div>
+
+    <!-- Search & Status Filters -->
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+        <input type="text" id="topicSearchInput" placeholder="Search line by line topics (उदा. चौहान, मेवाड़, पंचायती राज)..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-1 focus:ring-brand-500">
+      </div>
+      <select id="topicStatusFilter" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs px-2 py-1.5 outline-none">
+        <option value="ALL">All Status</option>
+        <option value="PENDING">Pending Only</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="REVISION">Revision Due</option>
+      </select>
+    </div>
+
+    <!-- Granular Syllabus List -->
+    <div id="syllabusContainer" class="space-y-3">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- 3. DUTY & AVAILABILITY CALENDAR -->
+  <section id="viewCalendar" class="space-y-3 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div>
+          <h3 class="font-bold text-sm">Duty Shifts & Monthly Availability</h3>
+          <p class="text-xs text-slate-500">Only 2 Shift Modes: Full Duty (4 hrs) or Holiday/Sunday (8 hrs).</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openBulkHolidayModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-xl font-medium shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-check"></i> <span>Add Month Holidays</span>
+          </button>
+          <div class="flex items-center gap-1">
+            <button id="prevMonthBtn" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="calendarMonthYear" class="text-xs font-bold px-2">Month Year</span>
+            <button id="nextMonthBtn" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duty Legend -->
+      <div class="flex flex-wrap gap-2 text-[11px] mb-3 pb-3 border-b border-slate-100 dark:border-slate-700 items-center justify-between">
+        <div class="flex flex-wrap gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 font-medium">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Full Day Duty (4.0 hrs)
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sunday / Holiday (8.0 hrs)
+          </span>
+        </div>
+      </div>
+
+      <!-- Calendar Grid -->
+      <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-400 mb-1">
+        <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+      </div>
+      <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1.5 text-xs">
+        <!-- Calendar dynamic cells -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. REVISION QUEUE VIEW -->
+  <section id="viewRevision" class="space-y-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+        <div>
+          <h3 class="font-bold text-base flex items-center gap-2">
+            <i class="fa-solid fa-repeat text-brand-600"></i>
+            <span>3-Day, 7-Day & 30-Day Spaced Revision Manager</span>
+          </h3>
+          <p class="text-xs text-slate-500">Stage 1 (+3 Days) ➔ Stage 2 (+7 Days) ➔ Stage 3 (+30 Days).</p>
+        </div>
+        <div class="inline-flex rounded-xl bg-slate-100 dark:bg-slate-900 p-1 text-xs font-semibold">
+          <button onclick="filterRevisionTab('TODAY')" id="revTabToday" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-brand-600 font-bold">Due Today</button>
+          <button onclick="filterRevisionTab('UPCOMING')" id="revTabUpcoming" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400">Upcoming</button>
+          <button onclick="filterRevisionTab('ALL')" id="revTabAll" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400">All Revisions</button>
+        </div>
+      </div>
+
+      <div id="revisionMasterList" class="space-y-2.5 mt-4">
+        <!-- Dynamic -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. STOPWATCH TIMER VIEW -->
+  <section id="viewTimer" class="space-y-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm text-center max-w-md mx-auto">
+      <h3 class="font-bold text-base mb-1">Study Session Stopwatch</h3>
+      <p class="text-xs text-slate-500 mb-6">Track your real study time accurately.</p>
+
+      <div class="mb-6">
+        <label class="block text-xs font-semibold text-slate-500 mb-2">Select Topic to Study:</label>
+        <select id="timerTopicSelect" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs outline-none">
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+
+      <div id="stopwatchDisplay" class="font-mono text-5xl font-extrabold tracking-wider my-6 text-brand-600 dark:text-brand-500">
+        00:00:00
+      </div>
+
+      <div class="flex items-center justify-center gap-3">
+        <button id="timerStartBtn" onclick="toggleTimer()" class="w-14 h-14 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg hover:bg-brand-700 text-xl transition">
+          <i id="timerPlayIcon" class="fa-solid fa-play ml-1"></i>
+        </button>
+        <button onclick="resetTimer()" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 text-sm transition">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button onclick="completeTimerSession()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check"></i> <span>Complete Session</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="appNotification" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2 hidden transition-all duration-300">
+    <i class="fa-solid fa-circle-info text-brand-500"></i>
+    <span id="notificationMsg">Notification message</span>
+    <button onclick="dismissNotification()" class="ml-2 text-slate-400 hover:text-white">&times;</button>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 grid grid-cols-5 text-[10px]">
+    <button id="tabBtnDashboard" onclick="switchTab('tabDashboard')" class="flex flex-col items-center py-2 tab-active transition">
+      <i class="fa-solid fa-house text-base mb-0.5"></i>
+      <span>Today</span>
+    </button>
+    <button id="tabBtnSyllabus" onclick="switchTab('tabSyllabus')" class="flex flex-col items-center py-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+      <i class="fa-solid fa-book text-base mb-0.5"></i>
+      <span>Syllabus</span>
+    </button>
+    <button id="tabBtnCalendar" onclick="switchTab('tabCalendar')" class="flex flex-col items-center py-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+      <i class="fa-solid fa-calendar-day text-base mb-0.5"></i>
+      <span>Duty Plan</span>
+    </button>
+    <button id="tabBtnRevision" onclick="switchTab('tabRevision')" class="flex flex-col items-center py-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 transition relative">
+      <i class="fa-solid fa-repeat text-base mb-0.5"></i>
+      <span>Revision</span>
+      <span id="navRevBadge" class="hidden absolute top-1.5 right-4 w-2 h-2 rounded-full bg-amber-500"></span>
+    </button>
+    <button id="tabBtnTimer" onclick="switchTab('tabTimer')" class="flex flex-col items-center py-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+      <i class="fa-solid fa-stopwatch text-base mb-0.5"></i>
+      <span>Timer</span>
+    </button>
+  </nav>
+
+  <!-- MODAL: DAY DUTY CONFIG -->
+  <div id="dayDutyModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-4 shadow-2xl border border-slate-200 dark:border-slate-700">
+      <div class="flex justify-between items-center mb-3">
+        <h4 id="modalDutyDateTitle" class="font-bold text-sm">Shift Configuration</h4>
+        <button onclick="closeModal('dayDutyModal')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <label class="flex items-center justify-between p-2.5 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 cursor-pointer">
+          <div class="flex items-center gap-2">
+            <input type="radio" name="modalDutyRadio" value="FULL_DUTY" class="text-brand-600">
+            <div>
+              <div class="font-bold text-slate-800 dark:text-slate-100">Full Day Duty</div>
+              <div class="text-[10px] text-slate-500">Working Day • Study Target: 4.0 Hours</div>
+            </div>
+          </div>
+          <span class="font-bold text-blue-600">4.0 hrs</span>
+        </label>
+
+        <label class="flex items-center justify-between p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 cursor-pointer">
+          <div class="flex items-center gap-2">
+            <input type="radio" name="modalDutyRadio" value="HOLIDAY" class="text-emerald-600">
+            <div>
+              <div class="font-bold text-slate-800 dark:text-slate-100">Holiday / Sunday</div>
+              <div class="text-[10px] text-slate-500">Full Study Day • Study Target: 8.0 Hours</div>
+            </div>
+          </div>
+          <span class="font-bold text-emerald-600">8.0 hrs</span>
+        </label>
+
+        <div class="pt-2">
+          <label class="block text-slate-500 mb-1">Optional Note / Duty Shift:</label>
+          <input type="text" id="modalDutyNoteInput" placeholder="उदा. Morning Shift, Court Duty etc." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none">
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-2">
+        <div class="flex gap-2">
+          <button onclick="saveDayDutyConfig()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-2 rounded-xl transition shadow">
+            Save Shift
+          </button>
+          <button onclick="closeModal('dayDutyModal')" class="px-3 bg-slate-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">
+            Cancel
+          </button>
+        </div>
+        <button onclick="revertToRegularDuty()" class="w-full text-center text-xs py-1.5 text-blue-600 hover:underline">
+          Revert to Regular Full Duty (4.0 hrs)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HIERARCHICAL TOPIC & SUBJECT PICKER (AUTO / CUSTOM) -->
+  <div id="topicPickerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-100 dark:border-slate-700">
+        <div>
+          <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">विषय एवं टॉपिक चयन (Auto / Custom Plan)</h4>
+          <p class="text-[11px] text-slate-500">जिन विषयों और टॉपिक्स को आज पढ़ना चाहते हैं उन्हें टिक करें।</p>
+        </div>
+        <button onclick="closeModal('topicPickerModal')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 mb-3 text-xs">
+        <span class="text-slate-500">कुल चयनित टॉपिक: <strong id="pickerSelectedCount" class="text-brand-600">0</strong></span>
+        <div class="flex gap-2">
+          <button onclick="selectAllPickerTopics(true)" class="text-brand-600 hover:underline">Select All</button>
+          <span class="text-slate-300">|</span>
+          <button onclick="selectAllPickerTopics(false)" class="text-slate-500 hover:underline">Deselect All</button>
+        </div>
+      </div>
+
+      <!-- Hierarchical Subject & Topic Checklist -->
+      <div id="pickerSyllabusTree" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2">
+        <button onclick="applyAutoPlanFromPicker()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+          <i class="fa-solid fa-bolt"></i> <span>चयनित से ऑटो प्लान बनाएं (ड्यूटी घंटों के अनुसार)</span>
+        </button>
+        <button onclick="applyDirectAddToToday()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+          <i class="fa-solid fa-calendar-plus"></i> <span>सीधे आज के प्लान में जोड़ें</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BULK MONTH HOLIDAY MANAGER -->
+  <div id="bulkHolidayModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-4 shadow-2xl border border-slate-200 dark:border-slate-700">
+      <div class="flex justify-between items-center mb-3">
+        <h4 class="font-bold text-sm">Bulk Month Holidays & Sundays</h4>
+        <button onclick="closeModal('bulkHolidayModal')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">महीने के सभी रविवार एवं अन्य छुट्टियों को एक साथ 8 घंटे की स्टडी में बदलें।</p>
+      
+      <div class="space-y-3 text-xs">
+        <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+          <input type="checkbox" id="bulkMarkSundays" checked class="w-4 h-4 rounded text-brand-600">
+          <span class="font-semibold text-slate-700 dark:text-slate-200">महीने के सभी रविवार (Sundays - 8 Hours)</span>
+        </label>
+        <div>
+          <label class="block text-slate-500 mb-1">अतिरिक्त छुट्टियों की तारीखें (अल्पविराम से लिखें, उदा: 15, 26):</label>
+          <input type="text" id="bulkExtraHolidaysInput" placeholder="उदा: 5, 14, 26" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 font-bold outline-none">
+        </div>
+        <label class="flex items-center gap-2 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 text-[11px] cursor-pointer">
+          <input type="checkbox" id="bulkRevertOthers" class="w-4 h-4 rounded text-rose-600">
+          <span>अन्य सभी सामान्य दिनों को पुनः फुल ड्यूटी (4 घंटे) पर रीसेट करें</span>
+        </label>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button onclick="saveBulkHolidays()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-2 rounded-xl transition">
+          लागू करें (Apply)
+        </button>
+        <button onclick="closeModal('bulkHolidayModal')" class="px-3 bg-slate-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">
+          रद्द करें
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PDF & WORD (.DOCX) LINE & COMMA IMPORTER -->
+  <div id="docImportModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-circle-check text-brand-600 text-base"></i>
+          <h4 class="font-bold text-sm">PDF एवं Word (.docx) सिलेबस इम्पोर्टर</h4>
+        </div>
+        <button onclick="closeModal('docImportModal')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-3">PDF या Word फाइल अपलोड करें या टेक्स्ट पेस्ट करें। यह नई लाइन और कोमा (,) के आधार पर प्रत्येक सब-टॉपिक को अलग-अलग विभाजित कर देगा।</p>
+
+      <div class="space-y-3 text-xs flex-1 overflow-y-auto pr-1">
+        <div>
+          <label class="block text-slate-500 mb-1">विषय चुनें या नया विषय बनाएं:</label>
+          <div class="flex gap-2">
+            <select id="docImportSubjectSelect" class="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none">
+              <!-- Dynamically filled -->
+            </select>
+            <input type="text" id="docImportNewSubjectInput" placeholder="या नया विषय लिखें..." class="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-500 mb-1">फाइल अपलोड करें (.pdf या .docx):</label>
+          <input type="file" id="docFileInput" accept=".pdf, .docx, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer">
+        </div>
+
+        <div>
+          <label class="block text-slate-500 mb-1">या सीधा सिलेबस टेक्स्ट पेस्ट करें:</label>
+          <textarea id="docRawTextarea" rows="6" placeholder="उदा: 
+चौहान राजवंश, गुहिल राजवंश, राठौड़ राजवंश, कछवाहा राजवंश
+राजस्थान के भौतिक विभाग, अपवाह तंत्र, प्रमुख झीलें, सिंचाई परियोजनाएं" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono text-xs"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label class="text-slate-500">प्रति सब-टॉपिक अध्ययन समय (घंटे):</label>
+          <input type="number" step="0.5" id="docHoursPerSubtopic" value="2.5" class="w-20 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-1.5 text-center font-bold">
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+        <button onclick="processDocImport()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow">
+          विभाजित करें और सिलेबस में जोड़ें
+        </button>
+        <button onclick="closeModal('docImportModal')" class="px-3 bg-slate-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">
+          रद्द करें
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CUSTOM TOPIC -->
+  <div id="customPlanModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-4 shadow-2xl border border-slate-200 dark:border-slate-700">
+      <div class="flex justify-between items-center mb-3">
+        <h4 class="font-bold text-sm">Add Custom Topic to Plan</h4>
+        <button onclick="closeModal('customPlanModal')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block text-slate-500 mb-1">Subject (विषय):</label>
+          <select id="customSubjectSelect" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Topic Title (टॉपिक का नाम):</label>
+          <input type="text" id="customTopicTitleInput" placeholder="उदा. कछवाहा राजवंश - मानसिंह एवं मिर्जा राजा जयसिंह" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Study Target Hours (घंटे):</label>
+          <input type="number" step="0.5" id="customTopicHoursInput" value="2.0" min="0.5" max="8" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 outline-none font-bold">
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="customTopicAddToToday" checked class="rounded text-brand-600">
+          <label for="customTopicAddToToday" class="text-slate-600 dark:text-slate-300">Add directly to Today's Study List</label>
+        </div>
+      </div>
+      <div class="mt-4 flex gap-2">
+        <button onclick="saveCustomTopic()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs py-2 rounded-xl transition">
+          Add Topic
+        </button>
+        <button onclick="closeModal('customPlanModal')" class="px-3 bg-slate-100 dark:bg-slate-700 text-xs font-semibold rounded-xl">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <script>
+    /* ============================================================
+       INDIAN AI FACTORY - RAS SMART STUDY ASSISTANT
+       ============================================================ */
+
+    const DEFAULT_GRANULAR_SYLLABUS = [
+      {
+        id: "raj_history_dynasties",
+        subjectHi: "राजस्थान का इतिहास: प्रमुख राजवंश (विभाजित)",
+        stage: "PRELIMS & MAINS",
+        topics: [
+          { id: "dyn_1", title: "चौहान राजवंश - अजमेर (अजयराज, अर्णोराज, विग्रहराज चतुर्थ, पृथ्वीराज तृतीय)", hours: 3.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_2", title: "चौहान राजवंश - रणथंभौर (हम्मीर देव चौहान) एवं जालोर (कान्हड़देव)", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_3", title: "गुहिल/सिसोदिया राजवंश - बप्पा रावल, जैत्रसिंह, रतनसिंह एवं पद्मिनी", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_4", title: "गुहिल/सिसोदिया राजवंश - राणा कुम्भा (सांस्कृतिक एवं युद्ध उपलब्धियां)", hours: 4.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_5", title: "गुहिल/सिसोदिया राजवंश - राणा सांगा एवं महाराणा प्रताप (मुगल संघर्ष)", hours: 4.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_6", title: "राठौड़ राजवंश (मारवाड़) - राव जोधा, राव मालदेव एवं राव चंद्रसेन", hours: 3.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_7", title: "राठौड़ राजवंश (बीकानेर) - राव बीका, रायसिंह एवं अनूपसिंह", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "dyn_8", title: "कछवाहा राजवंश (आमेर/जयपुर) - मानसिंह प्रथम, मिर्जा राजा जयसिंह, सवाई जयसिंह", hours: 3.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null }
+        ]
+      },
+      {
+        id: "raj_culture_heritage",
+        subjectHi: "राजस्थान कला, संस्कृति, साहित्य एवं धरोहर",
+        stage: "PRELIMS & MAINS",
+        topics: [
+          { id: "cul_1", title: "दुर्ग स्थापत्य - चित्तौड़गढ़, कुंभलगढ़, मेहरानगढ़, रणथंभौर, गागरोन", hours: 3.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "cul_2", title: "चित्रकला शैलियां - मेवाड़, मारवाड़ (किशनगढ़), हाड़ौती व ढूंढाड़", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "cul_3", title: "लोक देवता - पंचपीर (पाबूजी, रामदेवजी, गोगाजी, मेहाजी, हड़बूजी) व तेजाजी", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "cul_4", title: "संत संप्रदाय - दादू दयाल, जसनाथ जी, जाम्भोजी, चरणदासी संप्रदाय", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "cul_5", title: "लोक नृत्य - शास्त्रीय (कथक), गैर, घूमर, कालबेलिया, तेरहताली नृत्य", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null }
+        ]
+      },
+      {
+        id: "raj_polity_admin",
+        subjectHi: "राजस्थान की प्रशासनिक एवं राजनीतिक व्यवस्था",
+        stage: "PRELIMS & MAINS",
+        topics: [
+          { id: "pol_1", title: "राज्यपाल - संवैधानिक स्थिति, शक्तियां एवं प्रशासनिक भूमिका", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "pol_2", title: "मुख्यमंत्री एवं मंत्रिपरिषद - कार्यप्रणाली एवं विधानसभा से संबंध", hours: 2.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "pol_3", title: "राजस्थान लोक सेवा आयोग (RPSC) एवं राज्य मानवाधिकार आयोग", hours: 2.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "pol_4", title: "पंचायती राज संस्थाएं (73वां संशोधन) एवं नगरीय निकाय (74वां संशोधन)", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null }
+        ]
+      },
+      {
+        id: "geo_rajasthan",
+        subjectHi: "राजस्थान का भूगोल एवं प्राकृतिक संसाधन",
+        stage: "PRELIMS & MAINS",
+        topics: [
+          { id: "geo_1", title: "भौतिक विभाग - थार मरुस्थल, अरावली पर्वतमाला, पूर्वी मैदान, हाड़ौती पठार", hours: 3.5, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "geo_2", title: "अपवाह तंत्र (नदियां) - बंगाल की खाड़ी, अरब सागर एवं आंतरिक अपवाह", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null },
+          { id: "geo_3", title: "प्रमुख सिंचाई परियोजनाएं - इंदिरा गांधी नहर (IGNP), बीसलपुर, नर्मदा नहर", hours: 3.0, status: "PENDING", revCount: 0, rev1Date: null, rev2Date: null, rev3Date: null }
+        ]
+      }
+    ];
+
+    const DUTY_HOURS = {
+      FULL_DUTY: 4.0,
+      HOLIDAY: 8.0
+    };
+
+    const AppState = {
+      theme: 'light',
+      currentDateKey: getTodayKey(),
+      calendarViewDate: new Date(),
+      dutyCalendar: {},
+      syllabus: [],
+      scheduledSessions: [],
+      activeTimer: {
+        isRunning: false,
+        startTime: null,
+        elapsedSeconds: 0,
+        intervalId: null,
+        topicId: null
+      },
+      revisionFilter: 'TODAY'
+    };
+
+    function getTodayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function addDaysToDateKey(baseKey, days) {
+      const parts = baseKey.split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setDate(d.getDate() + days);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function formatDateDisplay(dateStr) {
+      if (!dateStr) return '';
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    /* ============================================================
+       INDEXEDDB LOCAL STORAGE ENGINE
+       ============================================================ */
+    const DB_NAME = 'IndianAIFactory_RAS_V3';
+    const DB_VERSION = 3;
+    let dbInstance = null;
+
+    function openDatabase() {
+      return new Promise((resolve) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('studyStore')) {
+            db.createObjectStore('studyStore');
+          }
+        };
+        req.onsuccess = (e) => {
+          dbInstance = e.target.result;
+          resolve(dbInstance);
+        };
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    async function saveStateToStorage() {
+      const payload = {
+        theme: AppState.theme,
+        syllabus: AppState.syllabus,
+        dutyCalendar: AppState.dutyCalendar,
+        scheduledSessions: AppState.scheduledSessions
+      };
+      if (dbInstance) {
+        try {
+          const tx = dbInstance.transaction('studyStore', 'readwrite');
+          tx.objectStore('studyStore').put(payload, 'userData');
+        } catch (e) {}
+      } else {
+        localStorage.setItem('RAS_STUDY_STATE_V3', JSON.stringify(payload));
+      }
+    }
+
+    async function loadStateFromStorage() {
+      let saved = null;
+      if (dbInstance) {
+        saved = await new Promise((res) => {
+          try {
+            const tx = dbInstance.transaction('studyStore', 'readonly');
+            const req = tx.objectStore('studyStore').get('userData');
+            req.onsuccess = () => res(req.result);
+            req.onerror = () => res(null);
+          } catch (e) { res(null); }
+        });
+      }
+      if (!saved) {
+        const raw = localStorage.getItem('RAS_STUDY_STATE_V3');
+        if (raw) {
+          try { saved = JSON.parse(raw); } catch (e) {}
+        }
+      }
+
+      if (saved && saved.syllabus && saved.syllabus.length > 0) {
+        AppState.theme = saved.theme || 'light';
+        AppState.syllabus = saved.syllabus;
+        AppState.dutyCalendar = saved.dutyCalendar || {};
+        AppState.scheduledSessions = saved.scheduledSessions || [];
+      } else {
+        AppState.syllabus = JSON.parse(JSON.stringify(DEFAULT_GRANULAR_SYLLABUS));
+        initDutyCalendar();
+      }
+
+      applyTheme(AppState.theme);
+      runAutoDailyPlan(false);
+    }
+
+    function initDutyCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateObj = new Date(year, month, day);
+        const dayOfWeek = dateObj.getDay();
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        if (!AppState.dutyCalendar[key]) {
+          if (dayOfWeek === 0) {
+            AppState.dutyCalendar[key] = { type: 'HOLIDAY', hours: DUTY_HOURS.HOLIDAY, note: 'Sunday Off' };
+          } else {
+            AppState.dutyCalendar[key] = { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY, note: 'Duty Day' };
+          }
+        }
+      }
+    }
+
+    function applyTheme(t) {
+      AppState.theme = t;
+      if (t === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(AppState.theme === 'dark' ? 'light' : 'dark');
+      saveStateToStorage();
+    }
+
+    function showNotification(msg) {
+      const el = document.getElementById('appNotification');
+      document.getElementById('notificationMsg').textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4500);
+    }
+
+    function dismissNotification() {
+      document.getElementById('appNotification').classList.add('hidden');
+    }
+
+    /* ============================================================
+       DAILY PLANNER & MULTI-SUBJECT MIX ENGINE
+       ============================================================ */
+    function runAutoDailyPlan(isUserTriggered = false) {
+      const todayKey = AppState.currentDateKey;
+      const duty = AppState.dutyCalendar[todayKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY };
+      const maxAvailableHours = duty.hours || DUTY_HOURS.FULL_DUTY;
+
+      checkAndInjectDueRevisions(todayKey);
+
+      let todaySessions = AppState.scheduledSessions.filter(s => s.date === todayKey && !s.done);
+      let usedHours = todaySessions.reduce((acc, s) => acc + (s.hours || 1.5), 0);
+
+      if (usedHours < maxAvailableHours) {
+        const availableSub1 = AppState.syllabus[0];
+        const availableSub2 = AppState.syllabus.length > 2 ? AppState.syllabus[2] : (AppState.syllabus[1] || availableSub1);
+
+        const candidateSubjects = [availableSub1, availableSub2].filter(Boolean);
+        let subIndex = 0;
+
+        for (let tries = 0; tries < 8; tries++) {
+          if (usedHours >= maxAvailableHours) break;
+
+          const currentSub = candidateSubjects[subIndex % candidateSubjects.length];
+          subIndex++;
+
+          if (!currentSub) continue;
+
+          const pendingTopic = currentSub.topics.find(t => 
+            t.status === 'PENDING' && !AppState.scheduledSessions.some(s => s.topicId === t.id && !s.done)
+          );
+
+          if (pendingTopic) {
+            const allocateHours = Math.min(pendingTopic.hours || 2.0, maxAvailableHours - usedHours);
+            if (allocateHours >= 0.5) {
+              AppState.scheduledSessions.push({
+                id: 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                date: todayKey,
+                topicId: pendingTopic.id,
+                title: pendingTopic.title,
+                subjectTitle: currentSub.subjectHi,
+                hours: Number(allocateHours.toFixed(1)),
+                isRevision: false,
+                revisionStage: 0,
+                done: false
+              });
+              usedHours += allocateHours;
+            }
+          }
+        }
+      }
+
+      saveStateToStorage();
+      renderAll();
+
+      if (isUserTriggered) {
+        showNotification(`Study plan balanced for today (${maxAvailableHours}h target).`);
+      }
+    }
+
+    function checkAndInjectDueRevisions(targetDateKey) {
+      AppState.syllabus.forEach(sub => {
+        sub.topics.forEach(topic => {
+          if (topic.rev1Date === targetDateKey && topic.revCount === 0) {
+            const alreadyScheduled = AppState.scheduledSessions.some(
+              s => s.topicId === topic.id && s.date === targetDateKey && s.isRevision && s.revisionStage === 1
+            );
+            if (!alreadyScheduled) {
+              AppState.scheduledSessions.push({
+                id: 'rev1_' + topic.id + '_' + targetDateKey,
+                date: targetDateKey,
+                topicId: topic.id,
+                title: topic.title,
+                subjectTitle: sub.subjectHi,
+                hours: Math.max(0.5, Number(((topic.hours || 2.5) * 0.4).toFixed(1))),
+                isRevision: true,
+                revisionStage: 1,
+                done: false
+              });
+            }
+          }
+
+          if (topic.rev2Date === targetDateKey && topic.revCount === 1) {
+            const alreadyScheduled = AppState.scheduledSessions.some(
+              s => s.topicId === topic.id && s.date === targetDateKey && s.isRevision && s.revisionStage === 2
+            );
+            if (!alreadyScheduled) {
+              AppState.scheduledSessions.push({
+                id: 'rev2_' + topic.id + '_' + targetDateKey,
+                date: targetDateKey,
+                topicId: topic.id,
+                title: topic.title,
+                subjectTitle: sub.subjectHi,
+                hours: Math.max(0.5, Number(((topic.hours || 2.5) * 0.3).toFixed(1))),
+                isRevision: true,
+                revisionStage: 2,
+                done: false
+              });
+            }
+          }
+
+          if (topic.rev3Date === targetDateKey && topic.revCount === 2) {
+            const alreadyScheduled = AppState.scheduledSessions.some(
+              s => s.topicId === topic.id && s.date === targetDateKey && s.isRevision && s.revisionStage === 3
+            );
+            if (!alreadyScheduled) {
+              AppState.scheduledSessions.push({
+                id: 'rev3_' + topic.id + '_' + targetDateKey,
+                date: targetDateKey,
+                topicId: topic.id,
+                title: topic.title,
+                subjectTitle: sub.subjectHi,
+                hours: Math.max(0.5, Number(((topic.hours || 2.5) * 0.25).toFixed(1))),
+                isRevision: true,
+                revisionStage: 3,
+                done: false
+              });
+            }
+          }
+        });
+      });
+    }
+
+    function tickCompleteNewTopic(sessionId, topicId) {
+      const sess = AppState.scheduledSessions.find(s => s.id === sessionId);
+      if (sess) {
+        sess.done = true;
+      }
+
+      const todayKey = AppState.currentDateKey;
+      const rev1Due = addDaysToDateKey(todayKey, 3);
+
+      AppState.syllabus.forEach(sub => {
+        const t = sub.topics.find(x => x.id === topicId);
+        if (t) {
+          t.status = "COMPLETED";
+          t.rev1Date = rev1Due;
+          t.revCount = 0;
+        }
+      });
+
+      saveStateToStorage();
+      renderAll();
+      showNotification(`Completed! 1st Revision scheduled for ${formatDateDisplay(rev1Due)} (3 days later).`);
+    }
+
+    function tickCompleteRevision(sessionId, topicId, currentStage) {
+      const sess = AppState.scheduledSessions.find(s => s.id === sessionId);
+      if (sess) {
+        sess.done = true;
+      }
+
+      const todayKey = AppState.currentDateKey;
+
+      AppState.syllabus.forEach(sub => {
+        const t = sub.topics.find(x => x.id === topicId);
+        if (t) {
+          if (currentStage === 1) {
+            const rev2Due = addDaysToDateKey(todayKey, 7);
+            t.revCount = 1;
+            t.rev2Date = rev2Due;
+            showNotification(`1st Revision done! 2nd Revision scheduled for ${formatDateDisplay(rev2Due)} (7 days later).`);
+          } else if (currentStage === 2) {
+            const rev3Due = addDaysToDateKey(todayKey, 30);
+            t.revCount = 2;
+            t.rev3Date = rev3Due;
+            showNotification(`2nd Revision done! 3rd Revision scheduled for ${formatDateDisplay(rev3Due)} (30 days later).`);
+          } else {
+            t.revCount = 3;
+            showNotification(`30-Day Revision completed! Topic permanently mastered.`);
+          }
+        }
+      });
+
+      saveStateToStorage();
+      renderAll();
+    }
+
+    let selectedCalendarDateKey = null;
+
+    function openDayDutyConfig(dateKey) {
+      selectedCalendarDateKey = dateKey || AppState.currentDateKey;
+      const duty = AppState.dutyCalendar[selectedCalendarDateKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY, note: '' };
+
+      document.getElementById('modalDutyDateTitle').textContent = `Shift: ${formatDateDisplay(selectedCalendarDateKey)}`;
+      
+      const radios = document.getElementsByName('modalDutyRadio');
+      for (const r of radios) {
+        r.checked = (r.value === duty.type);
+      }
+
+      document.getElementById('modalDutyNoteInput').value = duty.note || '';
+      openModal('dayDutyModal');
+    }
+
+    function saveDayDutyConfig() {
+      if (!selectedCalendarDateKey) return;
+      const radios = document.getElementsByName('modalDutyRadio');
+      let type = 'FULL_DUTY';
+      for (const r of radios) {
+        if (r.checked) type = r.value;
+      }
+
+      const hours = DUTY_HOURS[type] || 4.0;
+      const note = document.getElementById('modalDutyNoteInput').value.trim();
+
+      AppState.dutyCalendar[selectedCalendarDateKey] = { type, hours, note };
+      closeModal('dayDutyModal');
+      saveStateToStorage();
+      runAutoDailyPlan(false);
+      showNotification(`Shift updated to ${type === 'HOLIDAY' ? 'Holiday (8h)' : 'Full Duty (4h)'}!`);
+    }
+
+    function revertToRegularDuty() {
+      if (!selectedCalendarDateKey) return;
+      AppState.dutyCalendar[selectedCalendarDateKey] = {
+        type: 'FULL_DUTY',
+        hours: DUTY_HOURS.FULL_DUTY,
+        note: 'Regular Duty Day'
+      };
+      closeModal('dayDutyModal');
+      saveStateToStorage();
+      runAutoDailyPlan(false);
+      renderAll();
+      showNotification(`${formatDateDisplay(selectedCalendarDateKey)} successfully reverted to Full Duty (4.0 hrs)!`);
+    }
+
+    /* ============================================================
+       TOPIC & SUBJECT HIERARCHICAL PICKER (AUTO / CUSTOM)
+       ============================================================ */
+    function openTopicPickerModal() {
+      const container = document.getElementById('pickerSyllabusTree');
+      let html = '';
+
+      AppState.syllabus.forEach(sub => {
+        html += `
+          <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
+            <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/50 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+              <label class="flex items-center gap-2 font-bold cursor-pointer">
+                <input type="checkbox" onchange="toggleSubjectPickerGroup('${sub.id}', this.checked)" class="subject-group-${sub.id} w-4 h-4 rounded text-brand-600">
+                <span>${sub.subjectHi}</span>
+              </label>
+              <span class="text-[10px] text-slate-500 font-semibold">${sub.topics.length} टॉपिक्स</span>
+            </div>
+            <div class="p-2.5 space-y-2">
+              ${sub.topics.map(t => `
+                <label class="flex items-start gap-2 text-xs p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer">
+                  <input type="checkbox" value="${t.id}" data-subid="${sub.id}" class="picker-topic-checkbox item-sub-${sub.id} mt-0.5 w-3.5 h-3.5 rounded text-brand-600" onchange="updatePickerCount()">
+                  <span class="flex-1 ${t.status === 'COMPLETED' ? 'text-slate-400' : 'text-slate-700 dark:text-slate-200'}">
+                    ${t.title} <span class="text-[10px] text-slate-400 font-medium">(${t.hours}h)</span>
+                  </span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      updatePickerCount();
+      openModal('topicPickerModal');
+    }
+
+    function toggleSubjectPickerGroup(subId, isChecked) {
+      document.querySelectorAll(`.item-sub-${subId}`).forEach(cb => {
+        cb.checked = isChecked;
+      });
+      updatePickerCount();
+    }
+
+    function selectAllPickerTopics(check) {
+      document.querySelectorAll('.picker-topic-checkbox').forEach(cb => cb.checked = check);
+      document.querySelectorAll('[class*="subject-group-"]').forEach(cb => cb.checked = check);
+      updatePickerCount();
+    }
+
+    function updatePickerCount() {
+      const selected = document.querySelectorAll('.picker-topic-checkbox:checked').length;
+      document.getElementById('pickerSelectedCount').textContent = selected;
+    }
+
+    function getSelectedPickerTopicIds() {
+      const ids = [];
+      document.querySelectorAll('.picker-topic-checkbox:checked').forEach(cb => ids.push(cb.value));
+      return ids;
+    }
+
+    function applyAutoPlanFromPicker() {
+      const selectedIds = getSelectedPickerTopicIds();
+      if (selectedIds.length === 0) {
+        showNotification('कृपया कम से कम एक टॉपिक चुनें!');
+        return;
+      }
+
+      const todayKey = AppState.currentDateKey;
+      const duty = AppState.dutyCalendar[todayKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY };
+      const maxAvailableHours = duty.hours || DUTY_HOURS.FULL_DUTY;
+
+      const todaySessions = AppState.scheduledSessions.filter(s => s.date === todayKey && !s.done);
+      let usedHours = todaySessions.reduce((acc, s) => acc + (s.hours || 1.5), 0);
+
+      let addedCount = 0;
+      selectedIds.forEach(tId => {
+        if (usedHours >= maxAvailableHours) return;
+
+        let foundTopic = null;
+        let foundSub = null;
+        AppState.syllabus.forEach(sub => {
+          const t = sub.topics.find(x => x.id === tId);
+          if (t) { foundTopic = t; foundSub = sub; }
+        });
+
+        if (foundTopic && !AppState.scheduledSessions.some(s => s.topicId === foundTopic.id && s.date === todayKey && !s.done)) {
+          const alloc = Math.min(foundTopic.hours || 2.0, maxAvailableHours - usedHours);
+          if (alloc >= 0.5) {
+            AppState.scheduledSessions.push({
+              id: 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              date: todayKey,
+              topicId: foundTopic.id,
+              title: foundTopic.title,
+              subjectTitle: foundSub.subjectHi,
+              hours: Number(alloc.toFixed(1)),
+              isRevision: false,
+              revisionStage: 0,
+              done: false
+            });
+            usedHours += alloc;
+            addedCount++;
+          }
+        }
+      });
+
+      closeModal('topicPickerModal');
+      saveStateToStorage();
+      renderAll();
+      showNotification(`${addedCount} टॉपिक्स आज के ${maxAvailableHours}h के प्लान में ऑटो शेड्यूल हो गए!`);
+    }
+
+    function applyDirectAddToToday() {
+      const selectedIds = getSelectedPickerTopicIds();
+      if (selectedIds.length === 0) {
+        showNotification('कृपया कम से कम एक टॉपिक चुनें!');
+        return;
+      }
+
+      const todayKey = AppState.currentDateKey;
+      let added = 0;
+
+      selectedIds.forEach(tId => {
+        let foundTopic = null;
+        let foundSub = null;
+        AppState.syllabus.forEach(sub => {
+          const t = sub.topics.find(x => x.id === tId);
+          if (t) { foundTopic = t; foundSub = sub; }
+        });
+
+        if (foundTopic && !AppState.scheduledSessions.some(s => s.topicId === foundTopic.id && s.date === todayKey && !s.done)) {
+          AppState.scheduledSessions.push({
+            id: 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            date: todayKey,
+            topicId: foundTopic.id,
+            title: foundTopic.title,
+            subjectTitle: foundSub.subjectHi,
+            hours: foundTopic.hours || 2.0,
+            isRevision: false,
+            revisionStage: 0,
+            done: false
+          });
+          added++;
+        }
+      });
+
+      closeModal('topicPickerModal');
+      saveStateToStorage();
+      renderAll();
+      showNotification(`${added} नए टॉपिक सीधे आज के प्लान में जोड़े गए!`);
+    }
+
+    /* ============================================================
+       RENDERERS
+       ============================================================ */
+    function renderDashboard() {
+      const todayKey = AppState.currentDateKey;
+      const dObj = new Date();
+      document.getElementById('todayDateLabel').textContent = dObj.toLocaleDateString('hi-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+      const duty = AppState.dutyCalendar[todayKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY, note: 'Duty Day' };
+      const targetHours = duty.hours || DUTY_HOURS.FULL_DUTY;
+
+      let dutyName = duty.type === 'HOLIDAY' ? 'Holiday / Sunday (8.0 hrs)' : 'Full Day Duty (4.0 hrs)';
+      document.getElementById('dutyStatusDesc').textContent = `${dutyName} • ${duty.note || ''}`;
+
+      const todaySessions = AppState.scheduledSessions.filter(s => s.date === todayKey);
+      const doneHours = todaySessions.filter(s => s.done).reduce((acc, s) => acc + (s.hours || 0), 0);
+      const pct = targetHours > 0 ? Math.min(100, Math.round((doneHours / targetHours) * 100)) : 100;
+      document.getElementById('dashProgressBar').style.width = `${pct}%`;
+
+      // PARTITION 1: TODAY'S NEW TOPICS
+      const activeNewTopics = todaySessions.filter(s => !s.isRevision && !s.done);
+      document.getElementById('newTopicsCountBadge').textContent = `${activeNewTopics.length} Pending`;
+
+      const newContainer = document.getElementById('todayNewTopicsList');
+      if (activeNewTopics.length === 0) {
+        newContainer.innerHTML = `
+          <div class="text-center py-16 text-slate-400 text-xs">
+            <i class="fa-solid fa-circle-check text-3xl text-emerald-400 mb-2"></i>
+            <p class="font-medium text-slate-600 dark:text-slate-300">आज के सभी नए टॉपिक पूरे हो चुके हैं!</p>
+            <button onclick="openTopicPickerModal()" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-bold hover:bg-brand-100">
+              <i class="fa-solid fa-plus-circle"></i> + विषय एवं टॉपिक चुनें
+            </button>
+          </div>
+        `;
+      } else {
+        newContainer.innerHTML = activeNewTopics.map(s => `
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex items-start justify-between gap-2 transition hover:border-brand-500">
+            <div class="flex items-start space-x-2.5 flex-1">
+              <input type="checkbox" onchange="tickCompleteNewTopic('${s.id}', '${s.topicId}')" class="mt-1 w-4 h-4 rounded text-brand-600 cursor-pointer" title="पढ़ा गया - टिक करें">
+              <div>
+                <h5 class="text-xs font-bold leading-snug text-slate-800 dark:text-slate-100">${s.title}</h5>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">${s.subjectTitle} • <strong class="text-brand-600">${s.hours} hrs</strong></span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1">
+              <button onclick="startSessionInTimer('${s.topicId}')" class="p-1.5 text-slate-400 hover:text-brand-600 text-xs" title="Study with Stopwatch">
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button onclick="removeSession('${s.id}')" class="p-1.5 text-slate-300 hover:text-rose-500 text-xs" title="Remove">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // PARTITION 2: TODAY'S REVISION
+      const activeRevisions = todaySessions.filter(s => s.isRevision && !s.done);
+      document.getElementById('revisionCountBadge').textContent = `${activeRevisions.length} Due`;
+
+      const revContainer = document.getElementById('todayRevisionsList');
+      if (activeRevisions.length === 0) {
+        revContainer.innerHTML = `
+          <div class="text-center py-16 text-slate-400 text-xs">
+            <i class="fa-solid fa-award text-3xl text-amber-400 mb-2"></i>
+            <p class="font-medium text-slate-600 dark:text-slate-300">आज कोई रिविज़न बाकी नहीं है!</p>
+            <p class="text-[10px] text-slate-400 mt-1">टॉपिक पूरा होने पर 3 दिन, 7 दिन और 30 दिन बाद यहाँ दिखाई देंगे।</p>
+          </div>
+        `;
+      } else {
+        revContainer.innerHTML = activeRevisions.map(s => {
+          let stageLabel = "Day 3 Revision";
+          let badgeColor = "bg-blue-100 text-blue-700";
+          if (s.revisionStage === 2) {
+            stageLabel = "Day 7 Revision";
+            badgeColor = "bg-purple-100 text-purple-700";
+          } else if (s.revisionStage === 3) {
+            stageLabel = "Day 30 Revision";
+            badgeColor = "bg-emerald-100 text-emerald-700";
+          }
+
+          return `
+            <div class="p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/40 shadow-sm flex items-start justify-between gap-2 transition hover:border-amber-500">
+              <div class="flex items-start space-x-2.5 flex-1">
+                <input type="checkbox" onchange="tickCompleteRevision('${s.id}', '${s.topicId}', ${s.revisionStage || 1})" class="mt-1 w-4 h-4 rounded text-amber-600 cursor-pointer" title="रिविज़न पूरा हुआ">
+                <div>
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold ${badgeColor}">
+                      ${stageLabel}
+                    </span>
+                    <h5 class="text-xs font-bold leading-snug">${s.title}</h5>
+                  </div>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">${s.subjectTitle} • रिविज़न समय: <strong class="text-amber-700 dark:text-amber-300">${s.hours} hrs</strong></span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button onclick="startSessionInTimer('${s.topicId}')" class="p-1.5 text-amber-600 hover:text-amber-800 text-xs" title="Study with Stopwatch">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const navRevBadge = document.getElementById('navRevBadge');
+      if (navRevBadge) {
+        if (activeRevisions.length > 0) {
+          navRevBadge.classList.remove('hidden');
+        } else {
+          navRevBadge.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderSyllabus() {
+      const container = document.getElementById('syllabusContainer');
+      const search = (document.getElementById('topicSearchInput').value || '').toLowerCase();
+      const statusFilter = document.getElementById('topicStatusFilter').value;
+
+      container.innerHTML = AppState.syllabus.map(sub => {
+        const visibleTopics = sub.topics.filter(t => {
+          if (statusFilter === 'COMPLETED' && t.status !== 'COMPLETED') return false;
+          if (statusFilter === 'PENDING' && t.status !== 'PENDING') return false;
+          if (statusFilter === 'REVISION' && (!t.rev1Date || t.revCount >= 3)) return false;
+
+          if (search) {
+            return t.title.toLowerCase().includes(search) || sub.subjectHi.toLowerCase().includes(search);
+          }
+          return true;
+        });
+
+        if (visibleTopics.length === 0 && search) return '';
+
+        const compCount = sub.topics.filter(x => x.status === 'COMPLETED').length;
+        const totalCount = sub.topics.length;
+        const pct = totalCount > 0 ? Math.round((compCount / totalCount) * 100) : 0;
+
+        return `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+            <details class="group" open>
+              <summary class="p-3 flex items-center justify-between cursor-pointer bg-slate-50/70 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-900 transition list-none">
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full ${pct === 100 ? 'bg-emerald-500' : 'bg-brand-500'}"></span>
+                  <span class="text-xs font-bold leading-tight">${sub.subjectHi}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-[11px] font-bold text-slate-500">${compCount}/${totalCount} (${pct}%)</span>
+                  <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </div>
+              </summary>
+              <div class="p-2.5 space-y-2 border-t border-slate-100 dark:border-slate-700">
+                ${visibleTopics.map(t => `
+                  <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-2 bg-slate-50/40 dark:bg-slate-900/20">
+                    <div class="flex items-start space-x-2 flex-1">
+                      <input type="checkbox" ${t.status === 'COMPLETED' ? 'checked' : ''} onchange="toggleTopicDirectCheck('${t.id}')" class="mt-0.5 w-4 h-4 rounded text-brand-600">
+                      <div>
+                        <div class="text-xs font-bold ${t.status === 'COMPLETED' ? 'line-through text-slate-400' : ''}">${t.title}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Target: ${t.hours} hrs • ${t.status} ${t.rev1Date ? `(Rev: ${formatDateDisplay(t.rev1Date)})` : ''}</div>
+                      </div>
+                    </div>
+                    <button onclick="addSyllabusTopicToToday('${t.id}')" class="text-[10px] bg-brand-50 dark:bg-brand-950 text-brand-600 px-2 py-1 rounded-lg font-bold hover:bg-brand-100">
+                      + Add Today
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleTopicDirectCheck(topicId) {
+      const todayKey = AppState.currentDateKey;
+      AppState.syllabus.forEach(sub => {
+        const t = sub.topics.find(x => x.id === topicId);
+        if (t) {
+          if (t.status === 'COMPLETED') {
+            t.status = 'PENDING';
+            t.rev1Date = null;
+            t.rev2Date = null;
+            t.rev3Date = null;
+            t.revCount = 0;
+            showNotification('Marked as pending.');
+          } else {
+            t.status = 'COMPLETED';
+            t.rev1Date = addDaysToDateKey(todayKey, 3);
+            t.revCount = 0;
+            showNotification(`Completed! 1st Revision set for ${formatDateDisplay(t.rev1Date)} (3 days).`);
+          }
+        }
+      });
+      saveStateToStorage();
+      renderAll();
+    }
+
+    function renderCalendar() {
+      const year = AppState.calendarViewDate.getFullYear();
+      const month = AppState.calendarViewDate.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const todayKey = AppState.currentDateKey;
+
+      const grid = document.getElementById('calendarDaysGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        grid.innerHTML += `<div class="h-14 sm:h-16 rounded-xl bg-slate-100/40 dark:bg-slate-800/20"></div>`;
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const duty = AppState.dutyCalendar[dateKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY };
+
+        const isHoliday = (duty.type === 'HOLIDAY');
+        const colorClass = isHoliday 
+          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900" 
+          : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900";
+
+        const isToday = (dateKey === todayKey);
+
+        const cell = document.createElement('div');
+        cell.className = `h-14 sm:h-16 rounded-xl p-1.5 border flex flex-col justify-between cursor-pointer transition transform active:scale-95 ${colorClass} ${isToday ? 'ring-2 ring-brand-500 font-extrabold' : ''}`;
+        cell.onclick = () => openDayDutyConfig(dateKey);
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="${isToday ? 'px-1 rounded bg-brand-500 text-white font-bold' : ''}">${day}</span>
+            <span class="font-bold opacity-80">${duty.hours}h</span>
+          </div>
+          <div class="flex items-center justify-between text-[9px] truncate font-medium">
+            <span>${isHoliday ? 'Holiday' : 'Duty'}</span>
+            <button onclick="event.stopPropagation(); quickToggleDutyDay('${dateKey}')" class="px-1 py-0.5 rounded bg-white/70 dark:bg-black/30 hover:scale-110 text-[8px]" title="Toggle 4h / 8h">
+              <i class="fa-solid fa-repeat"></i>
+            </button>
+          </div>
+        `;
+        grid.appendChild(cell);
+      }
+    }
+
+    function quickToggleDutyDay(dateKey) {
+      const cur = AppState.dutyCalendar[dateKey] || { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY };
+      if (cur.type === 'HOLIDAY') {
+        AppState.dutyCalendar[dateKey] = { type: 'FULL_DUTY', hours: DUTY_HOURS.FULL_DUTY, note: 'Duty Day' };
+        showNotification(`${formatDateDisplay(dateKey)}: Reverted to Full Duty (4.0 hrs)`);
+      } else {
+        AppState.dutyCalendar[dateKey] = { type: 'HOLIDAY', hours: DUTY_HOURS.HOLIDAY, note: 'Holiday' };
+        showNotification(`${formatDateDisplay(dateKey)}: Set to Holiday (8.0 hrs)`);
+      }
+      saveStateToStorage();
+      renderAll();
+    }
+
+    function addSyllabusTopicToToday(topicId) {
+      let foundTopic = null;
+      let foundSub = null;
+      AppState.syllabus.forEach(s => {
+        const t = s.topics.find(x => x.id === topicId);
+        if (t) { foundTopic = t; foundSub = s; }
+      });
+
+      if (!foundTopic) return;
+
+      const todayKey = AppState.currentDateKey;
+      AppState.scheduledSessions.push({
+        id: 'sess_' + Date.now(),
+        date: todayKey,
+        topicId: foundTopic.id,
+        title: foundTopic.title,
+        subjectTitle: foundSub.subjectHi,
+        hours: foundTopic.hours || 2.0,
+        isRevision: false,
+        revisionStage: 0,
+        done: false
+      });
+
+      saveStateToStorage();
+      renderAll();
+      showNotification('Added to Today\'s Study Plan!');
+    }
+
+    function renderRevisionView() {
+      const container = document.getElementById('revisionMasterList');
+      const todayKey = AppState.currentDateKey;
+
+      let allRevisionItems = [];
+      AppState.syllabus.forEach(sub => {
+        sub.topics.forEach(t => {
+          if (t.rev1Date) {
+            allRevisionItems.push({
+              topicId: t.id,
+              title: t.title,
+              subjectTitle: sub.subjectHi,
+              rev1Date: t.rev1Date,
+              rev2Date: t.rev2Date,
+              rev3Date: t.rev3Date,
+              revCount: t.revCount
+            });
+          }
+        });
+      });
+
+      let filtered = allRevisionItems;
+      if (AppState.revisionFilter === 'TODAY') {
+        filtered = allRevisionItems.filter(item => 
+          (item.revCount === 0 && item.rev1Date <= todayKey) || 
+          (item.revCount === 1 && item.rev2Date && item.rev2Date <= todayKey) ||
+          (item.revCount === 2 && item.rev3Date && item.rev3Date <= todayKey)
+        );
+      } else if (AppState.revisionFilter === 'UPCOMING') {
+        filtered = allRevisionItems.filter(item => 
+          (item.revCount === 0 && item.rev1Date > todayKey) || 
+          (item.revCount === 1 && item.rev2Date && item.rev2Date > todayKey) ||
+          (item.revCount === 2 && item.rev3Date && item.rev3Date > todayKey)
+        );
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs">
+            <i class="fa-solid fa-calendar-check text-3xl mb-2 text-emerald-400"></i>
+            <p>इस फ़िल्टर में कोई रिविज़न नहीं है।</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        let stageBadge = "Stage 1 (Day 3)";
+        let badgeColor = "bg-blue-100 text-blue-700";
+        let targetDate = item.rev1Date;
+        const isMastered = (item.revCount >= 3);
+
+        if (item.revCount === 1) {
+          stageBadge = "Stage 2 (Day 7)";
+          badgeColor = "bg-purple-100 text-purple-700";
+          targetDate = item.rev2Date;
+        } else if (item.revCount === 2) {
+          stageBadge = "Stage 3 (Day 30)";
+          badgeColor = "bg-amber-100 text-amber-700";
+          targetDate = item.rev3Date;
+        } else if (isMastered) {
+          stageBadge = "Mastered (30d Completed)";
+          badgeColor = "bg-emerald-100 text-emerald-700";
+          targetDate = item.rev3Date || 'Mastered';
+        }
+
+        return `
+          <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold">${item.title}</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${badgeColor}">
+                  ${stageBadge}
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-0.5">${item.subjectTitle} • Scheduled Date: ${formatDateDisplay(targetDate)}</p>
+            </div>
+            ${!isMastered ? `
+              <button onclick="tickDirectRevision('${item.topicId}')" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold shadow flex items-center gap-1">
+                <i class="fa-solid fa-check"></i> <span>Mark Reviewed</span>
+              </button>
+            ` : '<span class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-check-double mr-1"></i>Mastered</span>'}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function tickDirectRevision(topicId) {
+      const todayKey = AppState.currentDateKey;
+      AppState.syllabus.forEach(sub => {
+        const t = sub.topics.find(x => x.id === topicId);
+        if (t) {
+          if (t.revCount === 0) {
+            const nextRev = addDaysToDateKey(todayKey, 7);
+            t.revCount = 1;
+            t.rev2Date = nextRev;
+            showNotification(`Stage 1 Revision Done! Stage 2 scheduled for ${formatDateDisplay(nextRev)} (7 days later).`);
+          } else if (t.revCount === 1) {
+            const nextRev = addDaysToDateKey(todayKey, 30);
+            t.revCount = 2;
+            t.rev3Date = nextRev;
+            showNotification(`Stage 2 Revision Done! Stage 3 scheduled for ${formatDateDisplay(nextRev)} (30 days later).`);
+          } else {
+            t.revCount = 3;
+            showNotification('30-Day Final Revision Completed! Topic Mastered.');
+          }
+        }
+      });
+      saveStateToStorage();
+      renderAll();
+    }
+
+    function filterRevisionTab(tab) {
+      AppState.revisionFilter = tab;
+      ['revTabToday', 'revTabUpcoming', 'revTabAll'].forEach(id => {
+        document.getElementById(id).className = "px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400";
+      });
+      if (tab === 'TODAY') document.getElementById('revTabToday').className = "px-3 py-1 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-brand-600 font-bold";
+      if (tab === 'UPCOMING') document.getElementById('revTabUpcoming').className = "px-3 py-1 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-brand-600 font-bold";
+      if (tab === 'ALL') document.getElementById('revTabAll').className = "px-3 py-1 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-brand-600 font-bold";
+      renderRevisionView();
+    }
+
+    function removeSession(id) {
+      AppState.scheduledSessions = AppState.scheduledSessions.filter(s => s.id !== id);
+      saveStateToStorage();
+      renderAll();
+    }
+
+    /* ============================================================
+       CUSTOM PLAN CREATION
+       ============================================================ */
+    function openCustomPlanModal() {
+      populateSubjectDropdowns();
+      openModal('customPlanModal');
+    }
+
+    function saveCustomTopic() {
+      const subId = document.getElementById('customSubjectSelect').value;
+      const title = document.getElementById('customTopicTitleInput').value.trim();
+      const hours = parseFloat(document.getElementById('customTopicHoursInput').value) || 2.0;
+      const addToToday = document.getElementById('customTopicAddToToday').checked;
+
+      if (!title) {
+        showNotification('कृपया टॉपिक का नाम दर्ज करें!');
+        return;
+      }
+
+      const targetSub = AppState.syllabus.find(s => s.id === subId) || AppState.syllabus[0];
+      const newTopicId = 'custom_' + Date.now();
+      const newTopic = {
+        id: newTopicId,
+        title: title,
+        hours: hours,
+        status: 'PENDING',
+        revCount: 0,
+        rev1Date: null,
+        rev2Date: null,
+        rev3Date: null
+      };
+
+      targetSub.topics.push(newTopic);
+
+      if (addToToday) {
+        AppState.scheduledSessions.push({
+          id: 'sess_' + Date.now(),
+          date: AppState.currentDateKey,
+          topicId: newTopicId,
+          title: title,
+          subjectTitle: targetSub.subjectHi,
+          hours: hours,
+          isRevision: false,
+          revisionStage: 0,
+          done: false
+        });
+      }
+
+      closeModal('customPlanModal');
+      document.getElementById('customTopicTitleInput').value = '';
+      saveStateToStorage();
+      renderAll();
+      showNotification('नया टॉपिक सफलतापूर्वक जोड़ा गया!');
+    }
+
+    /* ============================================================
+       BULK MONTH HOLIDAYS MANAGER
+       ============================================================ */
+    function openBulkHolidayModal() {
+      openModal('bulkHolidayModal');
+    }
+
+    function saveBulkHolidays() {
+      const year = AppState.calendarViewDate.getFullYear();
+      const month = AppState.calendarViewDate.getMonth();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      const markSundays = document.getElementById('bulkMarkSundays').checked;
+      const extraHolidaysStr = document.getElementById('bulkExtraHolidaysInput').value;
+      const revertOthers = document.getElementById('bulkRevertOthers').checked;
+
+      const extraDays = extraHolidaysStr.split(',')
+        .map(n => parseInt(n.trim(), 10))
+        .filter(n => !isNaN(n) && n >= 1 && n <= totalDays);
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateObj = new Date(year, month, day);
+        const dayOfWeek = dateObj.getDay();
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        const isSunday = (dayOfWeek === 0);
+        const isExtra = extraDays.includes(day);
+
+        if ((markSundays && isSunday) || isExtra) {
+          AppState.dutyCalendar[dateKey] = {
+            type: 'HOLIDAY',
+            hours: DUTY_HOURS.HOLIDAY,
+            note: isSunday ? 'Sunday Holiday' : 'Gazetted Holiday'
+          };
+        } else if (revertOthers) {
+          AppState.dutyCalendar[dateKey] = {
+            type: 'FULL_DUTY',
+            hours: DUTY_HOURS.FULL_DUTY,
+            note: 'Duty Day'
+          };
+        }
+      }
+
+      closeModal('bulkHolidayModal');
+      saveStateToStorage();
+      renderAll();
+      showNotification('महीने की छुट्टियां और 8 घंटे का अध्ययन समय सेट हो गया!');
+    }
+
+    /* ============================================================
+       WORD (.DOCX) & PDF SYLLABUS IMPORTER
+       ============================================================ */
+    function openDocImportModal() {
+      populateSubjectDropdowns();
+      openModal('docImportModal');
+    }
+
+    function processDocImport() {
+      let subId = document.getElementById('docImportSubjectSelect').value;
+      const newSubName = document.getElementById('docImportNewSubjectInput').value.trim();
+      const rawText = document.getElementById('docRawTextarea').value;
+      const hoursPerSub = parseFloat(document.getElementById('docHoursPerSubtopic').value) || 2.5;
+
+      if (!rawText.trim()) {
+        showNotification('कृपया PDF/Word फाइल अपलोड करें या टेक्स्ट पेस्ट करें!');
+        return;
+      }
+
+      if (newSubName) {
+        const createdId = 'custom_sub_' + Date.now();
+        AppState.syllabus.push({
+          id: createdId,
+          subjectHi: newSubName,
+          stage: 'PRELIMS & MAINS',
+          topics: []
+        });
+        subId = createdId;
+      }
+
+      let targetSub = AppState.syllabus.find(s => s.id === subId);
+      if (!targetSub) {
+        targetSub = AppState.syllabus[0];
+      }
+
+      const rawLines = rawText.split(/\r?\n/);
+      let subtopics = [];
+
+      rawLines.forEach(line => {
+        const items = line.split(',');
+        items.forEach(item => {
+          const cleaned = item.replace(/^[•\-\*\d\.\)\:]\s*/, '').trim();
+          if (cleaned.length > 2) {
+            subtopics.push(cleaned);
+          }
+        });
+      });
+
+      if (subtopics.length === 0) {
+        showNotification('कोई सब-टॉपिक नहीं मिला!');
+        return;
+      }
+
+      subtopics.forEach((title, idx) => {
+        targetSub.topics.push({
+          id: 'imp_' + Date.now() + '_' + idx,
+          title: title,
+          hours: hoursPerSub,
+          status: 'PENDING',
+          revCount: 0,
+          rev1Date: null,
+          rev2Date: null,
+          rev3Date: null
+        });
+      });
+
+      closeModal('docImportModal');
+      document.getElementById('docRawTextarea').value = '';
+      saveStateToStorage();
+      renderAll();
+      showNotification(`सफलतापूर्वक ${subtopics.length} सब-टॉपिक अलग-अलग लाइन में विभाजित होकर जुड़ गए!`);
+    }
+
+    function populateSubjectDropdowns() {
+      const selects = [
+        document.getElementById('customSubjectSelect'),
+        document.getElementById('docImportSubjectSelect')
+      ];
+
+      selects.forEach(select => {
+        if (select) {
+          select.innerHTML = AppState.syllabus.map(s => `
+            <option value="${s.id}">${s.subjectHi}</option>
+          `).join('');
+        }
+      });
+
+      const timerSelect = document.getElementById('timerTopicSelect');
+      if (timerSelect) {
+        let opts = `<option value="">-- General Study Session --</option>`;
+        AppState.syllabus.forEach(sub => {
+          opts += `<optgroup label="${sub.subjectHi}">`;
+          sub.topics.forEach(t => {
+            opts += `<option value="${t.id}">${t.title}</option>`;
+          });
+          opts += `</optgroup>`;
+        });
+        timerSelect.innerHTML = opts;
+      }
+    }
+
+    /* ============================================================
+       STOPWATCH TIMER
+       ============================================================ */
+    function toggleTimer() {
+      if (AppState.activeTimer.isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    }
+
+    function startTimer() {
+      AppState.activeTimer.isRunning = true;
+      AppState.activeTimer.startTime = Date.now() - (AppState.activeTimer.elapsedSeconds * 1000);
+      AppState.activeTimer.intervalId = setInterval(updateTimerDisplay, 1000);
+
+      document.getElementById('timerPlayIcon').className = "fa-solid fa-pause";
+      document.getElementById('timerStartBtn').classList.add('badge-pulse');
+    }
+
+    function pauseTimer() {
+      AppState.activeTimer.isRunning = false;
+      clearInterval(AppState.activeTimer.intervalId);
+      document.getElementById('timerPlayIcon').className = "fa-solid fa-play ml-1";
+      document.getElementById('timerStartBtn').classList.remove('badge-pulse');
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      AppState.activeTimer.elapsedSeconds = 0;
+      updateStopwatchUI(0);
+    }
+
+    function updateTimerDisplay() {
+      const now = Date.now();
+      AppState.activeTimer.elapsedSeconds = Math.floor((now - AppState.activeTimer.startTime) / 1000);
+      updateStopwatchUI(AppState.activeTimer.elapsedSeconds);
+    }
+
+    function updateStopwatchUI(totalSec) {
+      const hrs = Math.floor(totalSec / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      document.getElementById('stopwatchDisplay').textContent = 
+        `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function completeTimerSession() {
+      if (AppState.activeTimer.elapsedSeconds < 60) {
+        showNotification('Session must be at least 1 minute.');
+        return;
+      }
+
+      const totalMins = Math.round(AppState.activeTimer.elapsedSeconds / 60);
+      const topicId = document.getElementById('timerTopicSelect').value;
+
+      pauseTimer();
+      resetTimer();
+
+      if (topicId) {
+        const sess = AppState.scheduledSessions.find(s => s.topicId === topicId && s.date === AppState.currentDateKey && !s.done);
+        if (sess) {
+          if (sess.isRevision) {
+            tickCompleteRevision(sess.id, topicId, sess.revisionStage);
+          } else {
+            tickCompleteNewTopic(sess.id, topicId);
+          }
+        } else {
+          toggleTopicDirectCheck(topicId);
+        }
+      } else {
+        showNotification(`Logged ${totalMins} minutes study time!`);
+      }
+    }
+
+    function startQuickTimer() {
+      switchTab('tabTimer');
+      if (!AppState.activeTimer.isRunning) {
+        startTimer();
+      }
+    }
+
+    function startSessionInTimer(topicId) {
+      switchTab('tabTimer');
+      const select = document.getElementById('timerTopicSelect');
+      if (select) select.value = topicId;
+      if (!AppState.activeTimer.isRunning) {
+        startTimer();
+      }
+    }
+
+    /* ============================================================
+       BACKUP & RESTORE
+       ============================================================ */
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AppState, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `RAS_Syllabus_Tracker_Backup_${getTodayKey()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification('Backup exported successfully!');
+    }
+
+    function resetAllData() {
+      if (window.confirm("Are you sure you want to reset all data and revert to defaults?")) {
+        AppState.syllabus = JSON.parse(JSON.stringify(DEFAULT_GRANULAR_SYLLABUS));
+        AppState.dutyCalendar = {};
+        AppState.scheduledSessions = [];
+        initDutyCalendar();
+        saveStateToStorage();
+        runAutoDailyPlan(false);
+        showNotification('Reset complete.');
+      }
+    }
+
+    /* ============================================================
+       TAB SWITCHER & MODAL HELPERS
+       ============================================================ */
+    function switchTab(tabId) {
+      const views = {
+        tabDashboard: document.getElementById('viewDashboard'),
+        tabSyllabus: document.getElementById('viewSyllabus'),
+        tabCalendar: document.getElementById('viewCalendar'),
+        tabRevision: document.getElementById('viewRevision'),
+        tabTimer: document.getElementById('viewTimer')
+      };
+
+      const buttons = {
+        tabDashboard: document.getElementById('tabBtnDashboard'),
+        tabSyllabus: document.getElementById('tabBtnSyllabus'),
+        tabCalendar: document.getElementById('tabBtnCalendar'),
+        tabRevision: document.getElementById('tabBtnRevision'),
+        tabTimer: document.getElementById('tabBtnTimer')
+      };
+
+      Object.keys(views).forEach(k => {
+        if (k === tabId) {
+          views[k].classList.remove('hidden');
+          if (buttons[k]) buttons[k].className = "flex flex-col items-center py-2 tab-active transition";
+        } else {
+          views[k].classList.add('hidden');
+          if (buttons[k]) buttons[k].className = "flex flex-col items-center py-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 transition";
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderSyllabus();
+      renderCalendar();
+      renderRevisionView();
+      populateSubjectDropdowns();
+    }
+
+    /* ============================================================
+       INITIALIZATION
+       ============================================================ */
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      }
+
+      await openDatabase();
+      await loadStateFromStorage();
+
+      document.getElementById('themeToggleBtn').onclick = toggleTheme;
+
+      const settingsBtn = document.getElementById('settingsMenuBtn');
+      const settingsDropdown = document.getElementById('settingsDropdown');
+      settingsBtn.onclick = (e) => {
+        e.stopPropagation();
+        settingsDropdown.classList.toggle('hidden');
+      };
+      document.addEventListener('click', () => settingsDropdown.classList.add('hidden'));
+
+      document.getElementById('prevMonthBtn').onclick = () => {
+        AppState.calendarViewDate.setMonth(AppState.calendarViewDate.getMonth() - 1);
+        renderCalendar();
+      };
+      document.getElementById('nextMonthBtn').onclick = () => {
+        AppState.calendarViewDate.setMonth(AppState.calendarViewDate.getMonth() + 1);
+        renderCalendar();
+      };
+
+      document.getElementById('topicSearchInput').oninput = renderSyllabus;
+      document.getElementById('topicStatusFilter').onchange = renderSyllabus;
+
+      const restoreInput = document.getElementById('restoreFileInput');
+      if (restoreInput) {
+        restoreInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            try {
+              const parsed = JSON.parse(evt.target.result);
+              if (parsed && parsed.syllabus) {
+                AppState.syllabus = parsed.syllabus;
+                AppState.dutyCalendar = parsed.dutyCalendar || {};
+                AppState.scheduledSessions = parsed.scheduledSessions || [];
+                saveStateToStorage();
+                renderAll();
+                showNotification('Backup restored successfully!');
+              }
+            } catch (err) {
+              showNotification('Invalid JSON file!');
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      const docFileInput = document.getElementById('docFileInput');
+      if (docFileInput) {
+        docFileInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const fileName = file.name.toLowerCase();
+
+          if (fileName.endsWith('.docx') && window.mammoth) {
+            const reader = new FileReader();
+            reader.onload = function(loadEvent) {
+              const arrayBuffer = loadEvent.target.result;
+              mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                .then(result => {
+                  document.getElementById('docRawTextarea').value = result.value;
+                  showNotification('Word (.docx) फाइल से सिलेबस टेक्स्ट लोड हुआ!');
+                })
+                .catch(() => showNotification('Word फाइल पढ़ने में समस्या आई। टेक्स्ट सीधे पेस्ट करें।'));
+            };
+            reader.readAsArrayBuffer(file);
+          } else if (fileName.endsWith('.pdf') && window.pdfjsLib) {
+            try {
+              const fileReader = new FileReader();
+              fileReader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = '';
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                  const page = await pdf.getPage(pageNum);
+                  const textContent = await page.getTextContent();
+                  const pageText = textContent.items.map(item => item.str).join(' ');
+                  fullText += pageText + '\n';
+                }
+
+                document.getElementById('docRawTextarea').value = fullText;
+                showNotification(`PDF से ${pdf.numPages} पेज का टेक्स्ट लोड हुआ!`);
+              };
+              fileReader.readAsArrayBuffer(file);
+            } catch (err) {
+              showNotification('PDF पढ़ने में समस्या आई। टेक्स्ट पेस्ट करें।');
+            }
+          }
+        });
+      }
+
+      renderAll();
+    });
+  </script>
+</body>
+</html>
